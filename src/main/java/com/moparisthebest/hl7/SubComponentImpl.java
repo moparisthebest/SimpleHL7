@@ -34,6 +34,10 @@ class SubComponentImpl implements SubComponent {
         value(value);
     }
 
+    SubComponentImpl(final SubComponent value) {
+        this.value = value.value();
+    }
+
     SubComponentImpl(final String s, final Encoding enc) {
         this.value = enc.decode(s);
     }

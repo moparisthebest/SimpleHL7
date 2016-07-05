@@ -41,10 +41,16 @@ abstract class SubComponentContainer<T extends SubComponent> implements SubCompo
         if(subComponents.isEmpty())
             subComponents.add(newSubComponent());
     }
+
+    protected SubComponentContainer(final SubComponentContainer<T> toClone) {
+        for(final T sc : toClone.subComponents)
+            this.subComponents.add(newSubComponent(sc));
+    }
     
     abstract T newSubComponent();
     abstract T newSubComponent(final String s);
     abstract T newSubComponent(final String s, final Encoding enc);
+    abstract T newSubComponent(final T s);
 
     protected final void encode(final StringBuilder sb, final Encoding enc, final char thisDelimiter, final char parentDelimiter) {
         for(final SubComponent e : subComponents)

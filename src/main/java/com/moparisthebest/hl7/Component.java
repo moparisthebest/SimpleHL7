@@ -30,6 +30,10 @@ public class Component extends SubComponentContainer<SubComponent> {
         super(s);
     }
 
+    Component(final Component s) {
+        super(s);
+    }
+
     Component(final String s, final Encoding enc) {
         super(s, enc, enc.subComponentDelimiter);
     }
@@ -41,6 +45,11 @@ public class Component extends SubComponentContainer<SubComponent> {
 
     @Override
     SubComponent newSubComponent(final String s) {
+        return new SubComponentImpl(s);
+    }
+
+    @Override
+    SubComponent newSubComponent(final SubComponent s) {
         return new SubComponentImpl(s);
     }
 

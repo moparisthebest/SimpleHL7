@@ -30,6 +30,10 @@ public class Repetition extends SubComponentContainer<Component> {
         super(s);
     }
 
+    Repetition(final Repetition s) {
+        super(s);
+    }
+
     Repetition(final String s, final Encoding enc) {
         super(s, enc, enc.componentDelimiter);
     }
@@ -41,6 +45,11 @@ public class Repetition extends SubComponentContainer<Component> {
 
     @Override
     Component newSubComponent(final String s) {
+        return new Component(s);
+    }
+
+    @Override
+    Component newSubComponent(final Component s) {
         return new Component(s);
     }
 

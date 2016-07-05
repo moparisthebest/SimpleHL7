@@ -30,6 +30,10 @@ public class Field extends SubComponentContainer<Repetition> {
         super(s);
     }
 
+    Field(final Field s) {
+        super(s);
+    }
+
     Field(final String s, final Encoding enc) {
         super(s, enc, enc.repetitionDelimiter);
     }
@@ -47,6 +51,11 @@ public class Field extends SubComponentContainer<Repetition> {
     @Override
     Repetition newSubComponent(final String s, final Encoding enc) {
         return new Repetition(s, enc);
+    }
+
+    @Override
+    Repetition newSubComponent(final Repetition s) {
+        return new Repetition(s);
     }
 
     public void encode(final StringBuilder sb, final Encoding enc) {

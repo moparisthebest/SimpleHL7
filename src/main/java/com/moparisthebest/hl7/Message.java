@@ -38,8 +38,17 @@ public class Message {
 
     private final List<Line> lines = new ArrayList<>();
 
+    private Message(boolean doNothing) {
+        // do nothing, only to be used from msa()
+    }
+
     public Message() {
         line("MSH");
+    }
+
+    public Message(final Message toClone) {
+        for(final Line line : toClone.lines)
+            this.lines.add(new Line(line));
     }
 
     public Message(final String sendingApplication, final String sendingFacility, final String receivingApplication, final String receivingFacility, final String messageCode, final String messageTriggerEvent, final String messageControlId, final String processingId, final String version) {
@@ -88,22 +97,37 @@ public class Message {
             if(!line.isEmpty())
                 lines.add(new Line(line, enc));
         // shift MSH one to account for brain-dead 1st field while setting encoding
-        final Line msh = this.lines.get(0);
+        final Line msh = this.line("MSH");
         msh.field(2); // expand array sufficiently
         msh.subComponents.add(1, enc.msh1);
         msh.subComponents.set(2, enc);
     }
 
+    public Encoding getEncoding() {
+        final Line msh = this.line("MSH");
+        final Field enc = msh.field(2);
+        if(enc instanceof Encoding)
+            return (Encoding)enc;
+        msh.subComponents.set(1, DEFAULT_ENCODING.msh1);
+        msh.subComponents.set(2, DEFAULT_ENCODING);
+        return DEFAULT_ENCODING;
+    }
+
+    public Message setEncoding(final Encoding enc) {
+        final Line msh = this.line("MSH");
+        msh.field(2); // expand array sufficiently
+        msh.subComponents.set(1, enc.msh1);
+        msh.subComponents.set(2, enc);
+        return this;
+    }
+
     public String encode() {
-        return this.encode(DEFAULT_ENCODING);
+        return this.encode(getEncoding());
     }
 
     public String encode(final Encoding enc) {
         // set encoding
-        final Line msh = this.lines.get(0);
-        msh.field(2); // expand array sufficiently
-        msh.subComponents.set(1, enc.msh1);
-        msh.subComponents.set(2, enc);
+        setEncoding(enc);
 
         final StringBuilder sb = new StringBuilder();
         for(final Line line : lines)
@@ -153,6 +177,35 @@ public class Message {
         return this;
     }
 
+    public Message msa(final String ackCode) {
+        final Line origMsh = this.line("MSH");
+        final Line newMsh = new Line(origMsh);
+
+        final Message msaMsg = new Message(true);
+        msaMsg.add(newMsh);
+
+        // swap send/recieve
+        newMsh.field(3).value(origMsh.field(5).value());
+        newMsh.field(4).value(origMsh.field(6).value());
+        newMsh.field(5).value(origMsh.field(3).value());
+        newMsh.field(6).value(origMsh.field(4).value());
+        // set time
+        newMsh.field(7).date(Instant.now());
+
+        // set type
+        final Field messageType = newMsh.field(9);
+        messageType.component(1).value("ACK");
+        messageType.component(2).value("001");
+        messageType.component(3).value("ACK_001");
+
+        // add MSA
+        final Line msa = msaMsg.add("MSA");
+        msa.field(1).value(ackCode);
+        msa.field(2).value(origMsh.field(10).value());
+
+        return msaMsg;
+    }
+
     public Message writeAndRead(final Socket sock, final Encoding enc) throws IOException, ParseException {
         return this.writeAndRead(sock.getOutputStream(), sock.getInputStream(), enc);
     }
@@ -191,15 +244,15 @@ public class Message {
     }
 
     public Message writeAndRead(final Socket sock) throws IOException, ParseException {
-        return this.writeAndRead(sock, DEFAULT_ENCODING);
+        return this.writeAndRead(sock, getEncoding());
     }
 
     public Message writeAndRead(final OutputStream os, final InputStream is) throws IOException, ParseException {
-        return this.writeAndRead(os, is, DEFAULT_ENCODING);
+        return this.writeAndRead(os, is, getEncoding());
     }
 
     public void writeTo(final OutputStream os) throws IOException {
-        this.writeTo(os, DEFAULT_ENCODING);
+        this.writeTo(os, getEncoding());
     }
 
     public static Message readFrom(final InputStream is) throws IOException, ParseException {

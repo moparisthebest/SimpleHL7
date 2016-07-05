@@ -26,6 +26,10 @@ public class Line extends SubComponentContainer<Field> {
         super(s);
     }
 
+    public Line(final Line toClone) {
+        super(toClone);
+    }
+
     Line(final String s, final Encoding enc) {
         super(s, enc, enc.fieldDelimiter);
     }
@@ -43,6 +47,12 @@ public class Line extends SubComponentContainer<Field> {
     @Override
     Field newSubComponent(final String s, final Encoding enc) {
         return new Field(s, enc);
+    }
+
+    @Override
+    Field newSubComponent(final Field s) {
+        // no need to clone Encoding or Encoding.MSH1, they are immutable
+        return s instanceof Encoding || s instanceof Encoding.MSH1 ? s : new Field(s);
     }
 
     public void encode(final StringBuilder sb, final Encoding enc) {
