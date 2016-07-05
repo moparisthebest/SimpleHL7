@@ -47,8 +47,18 @@ public class Server implements Runnable, Closeable {
         this(ss, msgProcessor, Message.DEFAULT_ENCODING);
     }
 
-    public Server(final int port, final MessageProcessor msgProcessor, final Encoding enc) throws IOException {
+    public Server(final int port, final int soTimeout, final MessageProcessor msgProcessor, final Encoding enc) throws IOException {
         this(new ServerSocket(port), msgProcessor, enc);
+        if(soTimeout >= 0)
+            this.ss.setSoTimeout(soTimeout);
+    }
+
+    public Server(final int port, final MessageProcessor msgProcessor, final Encoding enc) throws IOException {
+        this(port, -1, msgProcessor, enc);
+    }
+
+    public Server(final int port, final int soTimeout, final MessageProcessor msgProcessor) throws IOException {
+        this(port, soTimeout, msgProcessor, Message.DEFAULT_ENCODING);
     }
 
     public Server(final int port, final MessageProcessor msgProcessor) throws IOException {
@@ -57,12 +67,13 @@ public class Server implements Runnable, Closeable {
 
     @Override
     public void run() {
+        boolean shouldShutdown = false;
         try {
-            while (!ss.isClosed()) {
+            while (!ss.isClosed() && !(shouldShutdown = msgProcessor.shouldShutdown())) {
                 try (Socket s = ss.accept()) {
                     handleConnection(s);
                 } catch (final Throwable e) {
-                    msgProcessor.handle(e);
+                    msgProcessor.handle(e, this);
                 }
             }
         } catch (final Throwable e) {
@@ -73,6 +84,12 @@ public class Server implements Runnable, Closeable {
             }
             throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
         }
+        if(shouldShutdown)
+            try {
+                this.close();
+            } catch (Throwable e2) {
+                // ignore
+            }
     }
 
     protected void handleConnection(final Socket s) throws IOException, ParseException {

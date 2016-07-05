@@ -34,9 +34,13 @@ public interface MessageProcessor {
         return true; // by default allow anything
     }
 
-    default void handle(final Throwable e) {
+    default void handle(final Throwable e, final Server s) {
         if(e instanceof SocketException)
             throw new RuntimeException(e);
         // otherwise just ignore it
+    }
+
+    default boolean shouldShutdown() {
+        return false;
     }
 }

@@ -46,14 +46,15 @@ public class MultithreadServer extends Server {
 
     @Override
     public void run() {
+        boolean shouldShutdown = false;
         try {
-            while (!ss.isClosed()) {
+            while (!ss.isClosed() && !(shouldShutdown = msgProcessor.shouldShutdown())) {
                 final Socket s = ss.accept();
                 new Thread(() -> {
                     try {
                         handleConnection(s);
                     } catch (final Throwable e) {
-                        msgProcessor.handle(e);
+                        msgProcessor.handle(e, this);
                     } finally {
                         try {
                             s.close();
@@ -71,5 +72,11 @@ public class MultithreadServer extends Server {
             }
             throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
         }
+        if(shouldShutdown)
+            try {
+                this.close();
+            } catch (Throwable e2) {
+                // ignore
+            }
     }
 }
