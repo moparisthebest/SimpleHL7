@@ -94,13 +94,14 @@ public class Server implements Runnable, Closeable {
 
     protected void handleConnection(final Socket s) throws IOException, ParseException {
         if (msgProcessor.allowConnection(s))
-            try (InputStream is = s.getInputStream()) {
-                final Message in = Message.readFrom(is, enc);
-                final Message out = msgProcessor.process(in);
-                if (out != null)
-                    try (OutputStream os = s.getOutputStream()) {
+            try (InputStream is = s.getInputStream();
+                 OutputStream os = s.getOutputStream()) {
+                Message in;
+                while((in = Message.readFrom(is, enc)) != null) {
+                    final Message out = msgProcessor.process(in);
+                    if (out != null)
                         out.writeTo(os, enc);
-                    }
+                }
             }
     }
 
