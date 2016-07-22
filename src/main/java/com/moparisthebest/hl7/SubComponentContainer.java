@@ -21,9 +21,10 @@
 package com.moparisthebest.hl7;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-abstract class SubComponentContainer<T extends SubComponent> implements SubComponent {
+abstract class SubComponentContainer<T extends SubComponent> implements SubComponent, Iterable<T> {
     
     protected final List<T> subComponents = new ArrayList<>();
 
@@ -73,6 +74,15 @@ abstract class SubComponentContainer<T extends SubComponent> implements SubCompo
         while(subComponents.size() < index)
             subComponents.add(newSubComponent());
         return subComponents.get(index - 1);
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return subComponents.iterator();
+    }
+
+    protected int numSubComponents() {
+        return subComponents.size();
     }
 
     @Override

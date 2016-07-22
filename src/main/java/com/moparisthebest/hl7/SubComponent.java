@@ -24,15 +24,21 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.ResolverStyle;
-import java.time.format.SignStyle;
+import java.time.format.*;
+import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
 
 import static java.time.temporal.ChronoField.*;
 
 public interface SubComponent {
+
+    /*
+    For dates, I have seen:
+    20160722
+    201607221538
+    20160722153849-0400
+    20160722153849.854-0400
+     */
 
     DateTimeFormatter LOCAL_DATE = new DateTimeFormatterBuilder()
             .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
@@ -59,8 +65,11 @@ public interface SubComponent {
             .appendValue(HOUR_OF_DAY, 2)
             .appendValue(MINUTE_OF_HOUR, 2)
             .appendValue(SECOND_OF_MINUTE, 2)
-            .appendLiteral('.')
-            .appendValue(MILLI_OF_SECOND, 3)
+            .appendOptional(new DateTimeFormatterBuilder()
+                    .appendLiteral('.')
+                    .appendValue(MILLI_OF_SECOND, 3)
+                    .parseStrict()
+                    .toFormatter())
             .appendOffset("+HHMM", "0000")
             .parseStrict()
             .toFormatter(Locale.US)
@@ -91,6 +100,31 @@ public interface SubComponent {
         this.value(INSTANT.format(date));
     }
 
+    default TemporalAccessor date() {
+        // try each in succession from most detail to least until one doesn't crash
+        try {
+            return INSTANT.parse(this.value());
+        } catch (DateTimeParseException e) {
+            try {
+                return LOCAL_DATE_TIME.parse(this.value());
+            } catch (DateTimeParseException e2) {
+                return LOCAL_DATE.parse(this.value());
+            }
+        }
+    }
+
+    default LocalDate localDate() {
+        return LOCAL_DATE.parse(this.value(), LocalDate::from);
+    }
+
+    default LocalDateTime localDateTime() {
+        return LOCAL_DATE_TIME.parse(this.value(), LocalDateTime::from);
+    }
+
+    default Instant instant() {
+        return INSTANT.parse(this.value(), Instant::from);
+    }
+
     // shorter aliases
 
     default SubComponent v(final String value) {
@@ -111,5 +145,9 @@ public interface SubComponent {
 
     default void d(final Instant date) {
         this.date(date);
+    }
+
+    default TemporalAccessor d() {
+        return this.date();
     }
 }

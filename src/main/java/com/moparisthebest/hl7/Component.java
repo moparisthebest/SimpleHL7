@@ -62,6 +62,10 @@ public class Component extends SubComponentContainer<SubComponent> {
         super.encode(sb, enc, enc.subComponentDelimiter, enc.componentDelimiter);
     }
 
+    public int numSubComponents() {
+        return super.numSubComponents();
+    }
+
     public SubComponent subComponent(final int index) {
         return super.subComponent1Based(index);
     }

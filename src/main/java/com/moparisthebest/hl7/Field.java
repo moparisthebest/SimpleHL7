@@ -70,6 +70,14 @@ public class Field extends SubComponentContainer<Repetition> {
         return new RepetitionCounter(this, startIndex);
     }
 
+    public int numRepetitions() {
+        return super.numSubComponents();
+    }
+
+    public Repetition removeRepetition(final int index) {
+        return super.subComponents.remove(index - 1);
+    }
+
     public Repetition repetition(final int index) {
         return super.subComponent1Based(index);
     }

@@ -62,6 +62,10 @@ public class Repetition extends SubComponentContainer<Component> {
         super.encode(sb, enc, enc.componentDelimiter, enc.repetitionDelimiter);
     }
 
+    public int numComponents() {
+        return super.numSubComponents();
+    }
+
     public Component component(final int index) {
         return super.subComponent1Based(index);
     }
