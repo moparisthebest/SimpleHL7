@@ -89,19 +89,21 @@ public interface SubComponent {
     }
 
     default void date(final LocalDate date) {
-        this.value(LOCAL_DATE.format(date));
+        this.value(date == null ? "" : LOCAL_DATE.format(date));
     }
 
     default void date(final LocalDateTime date) {
-        this.value(LOCAL_DATE_TIME.format(date));
+        this.value(date == null ? "" : LOCAL_DATE_TIME.format(date));
     }
 
     default void date(final Instant date) {
-        this.value(INSTANT.format(date));
+        this.value(date == null ? "" : INSTANT.format(date));
     }
 
     default TemporalAccessor date() {
         // try each in succession from most detail to least until one doesn't crash
+        if(isEmpty())
+            return null;
         try {
             return INSTANT.parse(this.value());
         } catch (DateTimeParseException e) {
@@ -114,15 +116,15 @@ public interface SubComponent {
     }
 
     default LocalDate localDate() {
-        return LOCAL_DATE.parse(this.value(), LocalDate::from);
+        return isEmpty() ? null : LOCAL_DATE.parse(this.value(), LocalDate::from);
     }
 
     default LocalDateTime localDateTime() {
-        return LOCAL_DATE_TIME.parse(this.value(), LocalDateTime::from);
+        return isEmpty() ? null : LOCAL_DATE_TIME.parse(this.value(), LocalDateTime::from);
     }
 
     default Instant instant() {
-        return INSTANT.parse(this.value(), Instant::from);
+        return isEmpty() ? null : INSTANT.parse(this.value(), Instant::from);
     }
 
     // shorter aliases
